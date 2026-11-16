@@ -188,5 +188,95 @@
 		"title": "Knight-Hennessy Scholars — Stanford University",
 		"sourceUrl": "https://knight-hennessy.stanford.edu/admission/before-you-apply/eligibility",
 		"sourceNote": "Official Stanford Knight-Hennessy eligibility page."
+	},
+	{
+		"title": "Fulbright Foreign Student Programme — Pakistan",
+		"sourceUrl": "https://usefp.org/scholarships/fulbright-degree.cfm",
+		"sourceNote": "Official United States Educational Foundation in Pakistan Fulbright Degree Program page."
+	},
+	{
+		"title": "Harvard College Financial Aid",
+		"sourceUrl": "https://college.harvard.edu/financial-aid",
+		"sourceNote": "Official Harvard College financial aid page; international applicants are eligible for Harvard-funded need-based aid."
+	},
+	{
+		"title": "Princeton University Financial Aid",
+		"sourceUrl": "https://admission.princeton.edu/cost-aid",
+		"sourceNote": "Official Princeton admission cost and aid page; it describes grant aid and the international student policy."
+	},
+	{
+		"title": "Brown University Financial Aid",
+		"sourceUrl": "https://admission.brown.edu/international/financial-aid",
+		"sourceNote": "Official Brown financial aid page for international applicants."
+	},
+	{
+		"title": "Yale University International Student Financial Aid",
+		"sourceUrl": "https://admissions.yale.edu/international",
+		"sourceNote": "Official Yale international admissions page describing need-based financial aid."
+	},
+	{
+		"title": "MIT International Student Financial Aid",
+		"sourceUrl": "https://sfs.mit.edu/undergraduate-students/apply-for-aid/international/",
+		"sourceNote": "Official MIT Student Financial Services information for international undergraduates."
+	},
+	{
+		"title": "Caltech International Student Financial Aid",
+		"sourceUrl": "https://www.admissions.caltech.edu/afford",
+		"sourceNote": "Official Caltech undergraduate admissions financial aid page."
+	},
+	{
+		"title": "UBC International Scholars Programme",
+		"sourceUrl": "https://you.ubc.ca/financial-planning/scholarships-awards-international-students/international-scholars",
+		"sourceNote": "Official UBC International Scholars Program page."
+	},
+	{
+		"title": "Lester B. Pearson International Scholarship — University of Toronto",
+		"sourceUrl": "https://future.utoronto.ca/pearson-scholarships",
+		"sourceNote": "Official University of Toronto Lester B. Pearson scholarship page."
+	},
+	{
+		"title": "McCall MacBain Scholarships — McGill University",
+		"sourceUrl": "https://mccallmacbainscholars.org/apply/",
+		"sourceNote": "Official McCall MacBain Scholars application page."
+	},
+	{
+		"title": "Pierre Elliott Trudeau Foundation Doctoral Scholarship",
+		"sourceUrl": "https://www.trudeaufoundation.ca/scholarship/",
+		"sourceNote": "Official Pierre Elliott Trudeau Foundation PhD scholarship programme page."
+	},
+	{
+		"title": "Australia Awards Scholarships — Pakistan",
+		"sourceUrl": "https://www.dfat.gov.au/people-to-people/australia-awards/participating-countries",
+		"sourceNote": "Official Australian DFAT participating-country and Pakistan programme information."
+	},
+	{
+		"title": "Australian Government Research Training Program (RTP)",
+		"sourceUrl": "https://www.education.gov.au/research-block-grants/research-training-program",
+		"sourceNote": "Official Australian Department of Education RTP page; awards and applications are administered by individual universities."
+	},
+	{
+		"title": "Melbourne Graduate Research Scholarships",
+		"sourceUrl": "https://scholarships.unimelb.edu.au/awards/graduate-research-scholarships",
+		"sourceNote": "Official University of Melbourne scholarship award page."
+	},
+	{
+		"title": "University of Sydney International Scholarship",
+		"sourceUrl": "https://www.sydney.edu.au/scholarships/international.html",
+		"sourceNote": "Official University of Sydney international scholarships directory; award subtype and eligibility must be matched to the applicant's program."
+	},
+	{
+		"title": "UNSW International Scientia Coursework Scholarship",
+		"sourceUrl": "https://www.unsw.edu.au/study/your-future/international-scholarships",
+		"sourceNote": "Official UNSW international scholarships page, which lists the International Scientia Coursework Scholarship."
+	},
+	{
+		"title": "Monash Graduate Research Scholarships",
+		"sourceUrl": "https://www.monash.edu/study/fees-scholarships/scholarships/scholarship-groups/research-scholarship",
+		"sourceNote": "Official Monash graduate research scholarship page; round dates and award eligibility are program-specific."
+	},
+	{
+		"title": "Australian National University RTP Scholarships",
+		"sourceUrl": "https://research.anu.edu.au/postgraduate-research-candidates/research-degree-scholarships",
+		"sourceNote": "Official ANU research degree scholarship page, including RTP options."
 	}
 ]

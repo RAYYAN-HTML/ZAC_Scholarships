@@ -19,29 +19,38 @@ if (!url) {
 }
 
 const candidates = JSON.parse(readFileSync(new URL('../data/scholarship-candidates-2026-11-16.json', import.meta.url), 'utf8')) as Candidate[];
-const ignoredWords = new Set(['scholarship', 'scholarships', 'programme', 'program', 'award', 'awards', 'the', 'of', 'and', 'for', 'in', 'at', 'by', 'study', 'studies', 'international', 'fully', 'fund', '2026', '2027', '2028', '2029', 'pakistan', 'entry', 'cohort', 'scheme', 'university']);
-const titleTokens = (title: string) => new Set(title.normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').split(' ').filter((token) => token && !ignoredWords.has(token)));
-const isLikelySameTitle = (left: string, right: string) => {
-	const a = titleTokens(left);
-	const b = titleTokens(right);
-	if (!a.size || !b.size) return false;
-	if (a.size === b.size && [...a].every((token) => b.has(token))) return true;
-	const smaller = a.size <= b.size ? a : b;
-	const larger = a.size <= b.size ? b : a;
-	return smaller.size >= 2 && [...smaller].every((token) => larger.has(token));
+const ignoredWords = new Set(['scholarship', 'scholarships', 'fellowship', 'fellowships', 'programme', 'program', 'award', 'awards', 'the', 'of', 'and', 'for', 'in', 'at', 'by', 'study', 'studies', 'international', 'fully', 'fund', 'pakistan', 'entry', 'cohort', 'scheme', 'university']);
+const titleKey = (title: string) => title.normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').split(' ').filter((token) => token && !ignoredWords.has(token) && !/^\d+$/.test(token)).sort().join(' ');
+const confirmedAliasGroups = [
+	['Global Korea Scholarship (GKS)', 'Global Korea Scholarship (GKS) Undergraduate University Track 2027'],
+	['Chinese Government Scholarship (CSC)', 'Chinese Government Scholarship Program 2027–28'],
+	['Harrison Physics Scholarship — Oxford', 'Wolfson Harrison Physics Scholarship 2027–28']
+].map((titles) => new Set(titles.map(titleKey)));
+const isSameTitle = (left: string, right: string) => {
+	const leftKey = titleKey(left);
+	const rightKey = titleKey(right);
+	return Boolean(leftKey && leftKey === rightKey) || confirmedAliasGroups.some((group) => group.has(leftKey) && group.has(rightKey));
 };
 
 const db = await mysql.createConnection(url);
-const [existing] = await db.query<mysql.RowDataPacket[]>('SELECT title FROM scholarships');
-const knownTitles = existing.map((row) => String(row.title));
+const [existing] = await db.query<mysql.RowDataPacket[]>('SELECT id,title,source_url,review_note FROM scholarships');
+const knownRows = existing.map((row) => ({ id: String(row.id), title: String(row.title), sourceUrl: row.source_url ? String(row.source_url) : null, reviewNote: row.review_note ? String(row.review_note) : null }));
 let imported = 0;
 let skipped = 0;
 
 try {
 	for (const candidate of candidates) {
-		const duplicate = knownTitles.find((title) => isLikelySameTitle(candidate.title, title));
-		if (duplicate) {
-			console.log(`Skipped possible duplicate: ${candidate.title} ↔ ${duplicate}`);
+		const matches = knownRows.filter((row) => isSameTitle(candidate.title, row.title));
+		if (matches.length) {
+			const officialMatch = matches.find((row) => row.sourceUrl);
+			const staleCandidate = officialMatch && matches.find((row) => !row.sourceUrl && row.reviewNote?.startsWith('Unverified candidate imported from the user-provided list'));
+			if (staleCandidate) {
+				const note = `${staleCandidate.reviewNote} Marked rejected and archived on 2026-11-16 because this candidate duplicates an existing source-backed listing: ${officialMatch.title}.`;
+				await db.execute('UPDATE scholarships SET verification_status=?,publication_status=?,review_note=?,updated_at=NOW() WHERE id=?', ['rejected', 'archived', note, staleCandidate.id]);
+				staleCandidate.reviewNote = note;
+				console.log(`Archived duplicate candidate: ${staleCandidate.title} → ${officialMatch.title}`);
+			}
+			console.log(`Skipped confirmed duplicate: ${candidate.title} ↔ ${matches[0].title}`);
 			skipped++;
 			continue;
 		}
@@ -60,10 +69,10 @@ try {
 			'INSERT INTO scholarships (id,slug,title,provider,country,category,degree_levels,fields_of_study,description,eligibility,benefits,required_documents,opening_date,deadline,funding_type,application_url,source_url,verified_at,verification_status,application_status,publication_status,review_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?,?)',
 			[randomUUID(), slug, candidate.title, 'Not specified', candidate.country, 'Other', candidate.degreeLevels, null, 'Unverified candidate from a user-provided list. Confirm that this scholarship exists and is open to Pakistani applicants before treating it as an opportunity.', 'Not specified — verify with the official provider.', 'Not specified — verify with the official provider.', 'Not specified — verify with the official provider.', null, null, 'Not specified', null, null, 'pending_verification', 'unconfirmed', 'draft', reviewNote]
 		);
-		knownTitles.push(candidate.title);
+		knownRows.push({ id: '', title: candidate.title, sourceUrl: null, reviewNote });
 		imported++;
 	}
-	console.log(`Candidate import complete: ${imported} added as pending, unpublished drafts; ${skipped} possible duplicates skipped; ${candidates.length} source rows reviewed.`);
+	console.log(`Candidate import complete: ${imported} added as pending, unpublished drafts; ${skipped} existing or confirmed duplicate rows skipped; ${candidates.length} source rows reviewed.`);
 } catch (error) {
 	console.error('Candidate import stopped. Imported items remain unpublished drafts.', error);
 	process.exitCode = 1;

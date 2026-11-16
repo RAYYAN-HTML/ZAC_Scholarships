@@ -19,7 +19,7 @@
 	}
 </script>
 
-<svelte:head><title>Manage scholarships | CCE Admin</title></svelte:head>
+<svelte:head><title>Manage scholarships | ZAC Admin</title></svelte:head>
 <div class="page-title"><div><span class="eyebrow">Content management</span><h1>Scholarships</h1><p>Review official sources and keep listings up to date.</p></div><a class="button button-primary" href="/admin/scholarships/new"><Plus size={14}/> Add scholarship</a></div>
 {#if form?.error}<div class="admin-alert" role="alert"><ShieldAlert size={17}/><span><b>Action not completed</b><small>{form.error}</small></span></div>{/if}
 {#if form?.success}<div class="success-alert" role="status">{form.success}</div>{/if}

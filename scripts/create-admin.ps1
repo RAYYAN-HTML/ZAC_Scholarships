@@ -1,6 +1,6 @@
 param(
 	[Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$Email,
-	[ValidateNotNullOrEmpty()][string]$Name = 'CCE Administrator'
+	[ValidateNotNullOrEmpty()][string]$Name = 'ZAC Administrator'
 )
 
 $ErrorActionPreference = 'Stop'

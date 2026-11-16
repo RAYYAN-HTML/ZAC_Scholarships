@@ -5,7 +5,7 @@
 	const number = (value: number) => new Intl.NumberFormat('en-PK').format(value);
 </script>
 
-<svelte:head><title>Admin overview | CCE</title></svelte:head>
+<svelte:head><title>Admin overview | ZAC</title></svelte:head>
 
 <div class="admin-title">
 	<div><span class="eyebrow">Overview</span><h1>Good to see you.</h1><p>A clear view of what needs attention.</p></div>

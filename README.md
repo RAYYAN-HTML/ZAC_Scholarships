@@ -1,4 +1,4 @@
-# CCE Scholarship Portal
+# ZAC Scholarship Portal
 
 A responsive scholarship discovery portal for students in Pakistan. The MVP uses Svelte 5, SvelteKit 2, TypeScript, Tailwind CSS 4, Drizzle ORM, MySQL, Zod, and Lucide Svelte.
 
@@ -18,7 +18,7 @@ A responsive scholarship discovery portal for students in Pakistan. The MVP uses
 Requirements: Node.js 20.19+ or 22.12+, pnpm, and MySQL 8.0+. This workspace has verified portable Node.js 24.22.1 and MySQL 8.4.13 Windows distributions under ignored `tools/`; no machine-wide runtime or database installation is required for the local setup script.
 
 1. Install dependencies: `pnpm install`
-2. The local `.env` is configured with randomly generated credentials and is ignored by Git. To initialize the local database, run from Windows PowerShell or Windows Terminal outside Codex: `powershell -ExecutionPolicy Bypass -File scripts/setup-local-mysql.ps1`. It initializes the database under `%LOCALAPPDATA%\CCE\MySQL-8.4`, starts MySQL on `127.0.0.1` only, sets a root password, creates the least-privilege CCE database account, applies migrations, and imports the researched listings as drafts. Codex's isolated terminal cannot give the MySQL process the required writable database directory or local TCP access.
+2. The local `.env` is configured with randomly generated credentials and is ignored by Git. To initialize the local database, run from Windows PowerShell or Windows Terminal outside Codex: `powershell -ExecutionPolicy Bypass -File scripts/setup-local-mysql.ps1`. It initializes the database under `%LOCALAPPDATA%\CCE\MySQL-8.4`, starts MySQL on `127.0.0.1` only, sets a root password, creates the least-privilege app database account, applies migrations, and imports the researched listings as drafts. Codex's isolated terminal cannot give the MySQL process the required writable database directory or local TCP access.
 3. Start the site: `pnpm dev`
 4. Run static checks: `pnpm check`
 5. Run focused regression tests: `pnpm test`
@@ -28,7 +28,7 @@ Requirements: Node.js 20.19+ or 22.12+, pnpm, and MySQL 8.0+. This workspace has
    powershell -ExecutionPolicy Bypass -File scripts/create-admin.ps1 -Email "you@example.com"
    ```
 
-   The display name defaults to “CCE Administrator”; pass `-Name "Your Name"` to change it. Use a unique password of at least 14 characters. The account is inserted into MySQL; the password is not stored in plaintext.
+   The display name defaults to “ZAC Administrator”; pass `-Name "Your Name"` to change it. Use a unique password of at least 14 characters. The account is inserted into MySQL; the password is not stored in plaintext.
 
 7. Open `/admin/login` and sign in.
 
@@ -36,7 +36,7 @@ Requirements: Node.js 20.19+ or 22.12+, pnpm, and MySQL 8.0+. This workspace has
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes and pull requests to `main` or `master`. It installs from the frozen pnpm lockfile, then runs the regression tests, Svelte/TypeScript checks, and production build with read-only repository permissions. The workflow has not run on GitHub yet because this workspace has no configured remote.
 
-The MySQL server is a local process, not a Windows service. Start it again after restarting Windows by running `mysqld.exe --defaults-file="tools/my.ini" --console` from a project PowerShell window. Keep the terminal open while using CCE. The local database files and downloaded server binaries are in ignored `tools/` and must not be committed.
+The MySQL server is a local process, not a Windows service. Start it again after restarting Windows by running `mysqld.exe --defaults-file="tools/my.ini" --console` from a project PowerShell window. Keep the terminal open while using ZAC. The local database files and downloaded server binaries are in ignored `tools/` and must not be committed.
 
 The readiness endpoint `/healthz` returns HTTP 200 only when the application can connect to MySQL; it returns a generic HTTP 503 response otherwise. It never returns database credentials or internal error details.
 
@@ -86,7 +86,7 @@ The controlled import is not a recurring scraper. Provider scans and opportunity
 
 The public site sends one first-party page-view event after client-side navigation. The server accepts only known public pages and slugs that belong to published, verified scholarships. Daily totals use the `Asia/Karachi` calendar date. The dashboard shows page views today, the last seven days, and the five most viewed published scholarships over the last 30 days.
 
-These are page-view counts, not unique visitors. CCE does not persist cookies, visitor identities, or IP addresses for analytics. The endpoint uses the existing in-memory rate-limit helper briefly keyed by request IP to limit abuse; that counter is bounded, resets, and is not written to MySQL. The analytics table was added in migration `0001_stale_dormammu.sql`; run `pnpm db:migrate` before expecting dashboard counts to load. Existing views are not backfilled.
+These are page-view counts, not unique visitors. ZAC does not persist cookies, visitor identities, or IP addresses for analytics. The endpoint uses the existing in-memory rate-limit helper briefly keyed by request IP to limit abuse; that counter is bounded, resets, and is not written to MySQL. The analytics table was added in migration `0001_stale_dormammu.sql`; run `pnpm db:migrate` before expecting dashboard counts to load. Existing views are not backfilled.
 
 ## Environment variables
 
@@ -105,7 +105,7 @@ After that code change:
 1. Push the project to the intended GitHub repository, then create a Railway service from that repository using Railpack. Railway detects `pnpm start`; set the build command to `pnpm build` if it is not detected automatically.
 2. Add Railway's MySQL service. In the app service, set `DATABASE_URL` to a private Railway variable reference for the MySQL service's `MYSQL_URL` (for example `${{MySQL.MYSQL_URL}}`, using the actual service name). Keep the database private; the app does not need `MYSQL_PUBLIC_URL`.
 3. Set `PUBLIC_SITE_URL` to the deployed HTTPS domain. Configure Railway's healthcheck path as `/healthz`; this endpoint returns 200 only when MySQL is reachable.
-4. Back up the database, run `pnpm db:migrate` in the app's Railway environment, create the first administrator with `pnpm admin:create admin@example.com "CCE Administrator"` and a temporary `ADMIN_INITIAL_PASSWORD`, then remove that temporary variable. Deploy and verify public routes, login/logout, admin guard, scholarship CRUD/publication, filters, feedback, sitemap, and mobile layouts.
+4. Back up the database, run `pnpm db:migrate` in the app's Railway environment, create the first administrator with `pnpm admin:create admin@example.com "ZAC Administrator"` and a temporary `ADMIN_INITIAL_PASSWORD`, then remove that temporary variable. Deploy and verify public routes, login/logout, admin guard, scholarship CRUD/publication, filters, feedback, sitemap, and mobile layouts.
 5. Configure database backups and test a restore before relying on them. Keep an encrypted backup outside the app host. Example manual backup and restore:
 
    ```sh
@@ -115,7 +115,7 @@ After that code change:
 
    Restrict backup file access, encrypt off-host copies, and test restores before relying on them. Never commit backups.
 
-Production database connectivity, persistent hosting, and backup automation are not configured. The analytics feature is implemented, but its migration has not been applied to the local database and its live request flow has not yet been verified. Production mobile/browser verification is also outstanding, so CCE is not launch-ready yet.
+Production database connectivity, persistent hosting, and backup automation are not configured. The analytics feature is implemented, but its migration has not been applied to the local database and its live request flow has not yet been verified. Production mobile/browser verification is also outstanding, so ZAC is not launch-ready yet.
 
 ## Package licenses
 

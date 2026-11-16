@@ -1,4 +1,4 @@
-name: Verify CCE
+name: Verify ZAC
 
 on:
   push:

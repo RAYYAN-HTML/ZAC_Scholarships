@@ -13,8 +13,29 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 	const order = filters.sort === 'latest'
 		? [desc(scholarships.createdAt)]
 		: [asc(isNull(scholarships.deadline)), asc(scholarships.deadline)];
-	const [rows, count, countries, total] = await Promise.all([db.select().from(scholarships).where(and(...conditions)).orderBy(...order).limit(size).offset((page - 1) * size), db.select({ value: sql<number>`count(*)` }).from(scholarships).where(and(...conditions)), db.selectDistinct({ value: scholarships.country }).from(scholarships).where(and(eq(scholarships.publicationStatus,'published'),eq(scholarships.verificationStatus,'verified'))).orderBy(asc(scholarships.country)), db.select({ value: sql<number>`count(*)` }).from(scholarships).where(and(eq(scholarships.publicationStatus,'published'),eq(scholarships.verificationStatus,'verified')))]);
-	return { rows, count: Number(count[0]?.value ?? 0), countries: countries.map((item) => item.value), total: Number(total[0]?.value ?? 0), page, pages: Math.ceil(Number(count[0]?.value ?? 0) / size) };
+	const publicListings = and(eq(scholarships.publicationStatus, 'published'), eq(scholarships.verificationStatus, 'verified'));
+	const [rows, count, countries, total] = await Promise.all([
+		db.select().from(scholarships).where(and(...conditions)).orderBy(...order).limit(size).offset((page - 1) * size),
+		db.select({ value: sql<number>`count(*)` }).from(scholarships).where(and(...conditions)),
+		db.selectDistinct({ value: scholarships.country }).from(scholarships).where(publicListings).orderBy(asc(scholarships.country)),
+		db.select({ value: sql<number>`count(*)` }).from(scholarships).where(publicListings)
+	]);
+	return {
+		rows,
+		count: Number(count[0]?.value ?? 0),
+		countries: countries.map((item) => item.value),
+		total: Number(total[0]?.value ?? 0),
+		page,
+		pages: Math.ceil(Number(count[0]?.value ?? 0) / size)
+	};
+}
+export async function findPublicScholarshipFilters() {
+	const publicListings = and(eq(scholarships.publicationStatus, 'published'), eq(scholarships.verificationStatus, 'verified'));
+	const [categories, fundingTypes] = await Promise.all([
+		getDb().selectDistinct({ value: scholarships.category }).from(scholarships).where(publicListings).orderBy(asc(scholarships.category)),
+		getDb().selectDistinct({ value: scholarships.fundingType }).from(scholarships).where(publicListings).orderBy(asc(scholarships.fundingType))
+	]);
+	return { categories: categories.map((item) => item.value), fundingTypes: fundingTypes.map((item) => item.value) };
 }
 export async function findScholarship(slug: string) { const result = await getDb().select().from(scholarships).where(and(eq(scholarships.slug, slug),eq(scholarships.publicationStatus,'published'),eq(scholarships.verificationStatus,'verified'))).limit(1); return result[0]; }
 export async function findAdminScholarships() { return getDb().select().from(scholarships).orderBy(desc(scholarships.updatedAt)); }

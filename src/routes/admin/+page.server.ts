@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { deleteSession } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
@@ -64,4 +64,4 @@ export async function load() {
 	}
 }
 
-export const actions={logout:async(event)=>{await deleteSession(event.cookies);return {success:true}}};
+export const actions={logout:async(event)=>{await deleteSession(event.cookies);redirect(303,'/admin/login')}};

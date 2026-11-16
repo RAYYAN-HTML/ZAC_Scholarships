@@ -9,13 +9,13 @@ A responsive scholarship discovery portal for students in Pakistan. The MVP uses
 - Public scholarship queries require both `verification_status = 'verified'` and `publication_status = 'published'`.
 - Admin login uses scrypt password hashes and HTTP-only, SameSite=strict, eight-day session cookies. A request-level server hook protects all `/admin` routes and actions except the public sign-in page; SvelteKit also enforces same-origin form submissions.
 - Admin scholarship review, duplicate warnings, publication guard, dashboard, and feedback moderation are implemented.
-- The controlled research import contains 24 opportunities researched from official sources. Research entries remain unpublished drafts pending admin verification and do not show publicly. Pakistan and international source scans are documented in `docs/research/`.
+- The controlled importers contain the initial 24 researched opportunities plus additional source-checked draft records. Drafts do not show publicly. Pakistan and international source scans are documented in `docs/research/`.
 - A persistent MySQL database is required for listings, admin login, and feedback. No database credentials are included. Without `DATABASE_URL`, the public site shows a clear empty/setup state and admin/database features cannot be used.
 - SvelteKit is configured with `adapter-node` and `pnpm start` runs the generated Node server. Railway service/database setup and production deployment are still outstanding.
 
 ## Local setup
 
-Requirements: Node.js 20.19+ or 22.12+, pnpm, and MySQL 8.0+. This workspace has verified portable Node.js 24.22.1 and MySQL 8.4.13 Windows distributions under ignored `tools/`; no machine-wide runtime or database installation is required for the local setup script.
+Requirements: Node.js 22.12 or newer, pnpm, and MySQL 8.0+. This workspace has verified portable Node.js 24.22.1 and MySQL 8.4.13 Windows distributions under ignored `tools/`; no machine-wide runtime or database installation is required for the local setup script.
 
 1. Install dependencies: `pnpm install`
 2. The local `.env` is configured with randomly generated credentials and is ignored by Git. To initialize the local database, run from Windows PowerShell or Windows Terminal outside Codex: `powershell -ExecutionPolicy Bypass -File scripts/setup-local-mysql.ps1`. It initializes the database under `%LOCALAPPDATA%\CCE\MySQL-8.4`, starts MySQL on `127.0.0.1` only, sets a root password, creates the least-privilege app database account, applies migrations, and imports the researched listings as drafts. Codex's isolated terminal cannot give the MySQL process the required writable database directory or local TCP access.
@@ -34,7 +34,7 @@ Requirements: Node.js 20.19+ or 22.12+, pnpm, and MySQL 8.0+. This workspace has
 
 ## Continuous integration
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes and pull requests to `main` or `master`. It installs from the frozen pnpm lockfile, then runs the regression tests, Svelte/TypeScript checks, and production build with read-only repository permissions. The workflow has not run on GitHub yet because this workspace has no configured remote.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes and pull requests to `main` or `master`. It installs from the frozen pnpm lockfile, then runs the regression tests, Svelte/TypeScript checks, and production build with read-only repository permissions. Check the repository’s Actions tab for the latest hosted workflow result.
 
 The MySQL server is a local process, not a Windows service. Start it again after restarting Windows by running `mysqld.exe --defaults-file="tools/my.ini" --console` from a project PowerShell window. Keep the terminal open while using ZAC. The local database files and downloaded server binaries are in ignored `tools/` and must not be committed.
 
@@ -102,6 +102,7 @@ The deployment target is Railway. SvelteKit uses `@sveltejs/adapter-node` and `p
 
 1. Push the project to `https://github.com/RAYYAN-HTML/ZAC_Scholarships`, then create a Railway service from that GitHub repository using Railpack. Set the build command to `pnpm build` and start command to `pnpm start` if Railway does not detect them.
 2. Add Railway's MySQL service. In the app service, set `DATABASE_URL` to a private Railway variable reference for the MySQL service's `MYSQL_URL` (for example `${{MySQL.MYSQL_URL}}`, using the actual service name). Keep the database private; the app does not need `MYSQL_PUBLIC_URL`.
+   A new Railway database starts with an empty schema and data. `pnpm db:migrate` creates tables but does not copy scholarship rows, admins, feedback, or analytics from local MySQL; plan and verify a separate database transfer before switching users to the hosted site.
 3. Set `PUBLIC_SITE_URL` to the deployed HTTPS domain. Configure Railway's healthcheck path as `/healthz`; this endpoint returns 200 only when MySQL is reachable.
 4. Set the app service's Pre-deploy Command to `pnpm db:migrate` and set a reasonable timeout. Railway runs it with the service's variables and private networking before starting a deployment; migration failure blocks the deployment. To create the first administrator, temporarily add `ADMIN_INITIAL_PASSWORD` to the app service variables, then run `railway run --no-local --service <app-service-name> --environment production pnpm admin:create admin@example.com "ZAC Administrator"` from the project folder. `--no-local` prevents the local `.env` from overriding Railway's production database URL. Remove `ADMIN_INITIAL_PASSWORD` after the admin is created. Deploy and verify public routes, login/logout, admin guard, scholarship CRUD/publication, filters, feedback, sitemap, and mobile layouts.
 5. Configure database backups and test a restore before relying on them. Keep an encrypted backup outside the app host. Example manual backup and restore:
@@ -117,7 +118,7 @@ Production database connectivity, persistent hosting, and backup automation are 
 
 ## Package licenses
 
-Direct dependencies and package metadata licenses: Svelte, SvelteKit, Vite, Tailwind CSS, Tailwind Vite plugin, Drizzle Kit, MySQL2, Zod, and dotenv use MIT; Lucide Svelte uses ISC; Drizzle ORM uses Apache-2.0. The portable Node.js runtime uses MIT; the MySQL server uses GPL-2.0 with Oracle’s FOSS License Exception. Review bundled license notices and package metadata before redistribution. No third-party source files were copied into this project.
+Direct dependency package metadata lists MIT for Svelte, SvelteKit, `@sveltejs/adapter-node`, `@sveltejs/vite-plugin-svelte`, Vite, Tailwind CSS and its Vite plugin, Drizzle Kit, MySQL2, Zod, tsx, and svelte-check; ISC for Lucide Svelte; Apache-2.0 for Drizzle ORM and TypeScript; and BSD-2-Clause for dotenv. The portable Node.js runtime uses MIT; the MySQL server uses GPL-2.0 with Oracle’s FOSS License Exception. Review bundled license notices and package metadata before redistribution. No third-party source files were copied into this project.
 
 ## Known limitations
 

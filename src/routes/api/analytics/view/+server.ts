@@ -14,6 +14,8 @@ const limiter = new FixedWindowRateLimiter(120, 60_000);
 
 export async function POST({ request, getClientAddress }) {
 	if (!env.DATABASE_URL) return new Response(null, { status: 204 });
+	if (request.headers.get('origin') !== new URL(request.url).origin) return new Response(null, { status: 403 });
+	if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return new Response(null, { status: 415 });
 	if (!limiter.consume(getClientAddress())) return new Response(null, { status: 429 });
 	let bodyText: string | null;
 	try {

@@ -9,9 +9,9 @@ A responsive scholarship discovery portal for students in Pakistan. The MVP uses
 - Public scholarship queries require both `verification_status = 'verified'` and `publication_status = 'published'`.
 - Admin login uses scrypt password hashes and HTTP-only, SameSite=strict, eight-day session cookies. A request-level server hook protects all `/admin` routes and actions except the public sign-in page; SvelteKit also enforces same-origin form submissions.
 - Admin scholarship review, duplicate warnings, publication guard, dashboard, and feedback moderation are implemented.
-- The controlled importers contain the initial 24 researched opportunities plus additional source-checked draft records. Drafts do not show publicly. Pakistan and international source scans are documented in `docs/research/`.
+- Controlled importers add researched opportunities as unpublished drafts. The 362 names in the user-provided international and Asia lists are retained as unverified candidates; missing facts and official URLs are not invented. Candidates remain private until an administrator researches and verifies them.
 - A persistent MySQL database is required for listings, admin login, and feedback. No database credentials are included. Without `DATABASE_URL`, the public site shows a clear empty/setup state and admin/database features cannot be used.
-- SvelteKit is configured with `adapter-node` and `pnpm start` runs the generated Node server. Railway service/database setup and production deployment are still outstanding.
+- SvelteKit is configured with `adapter-node` and `pnpm start` runs the generated Node server. The Railway production app and MySQL connection are live at `https://www.zacscholarships.info`; admin sign-in has been verified.
 
 ## Local setup
 
@@ -44,7 +44,7 @@ The readiness endpoint `/healthz` returns HTTP 200 only when the application can
 
 `src/lib/server/schema.ts` defines:
 
-- `scholarships`: source/application URLs, dates, eligibility and award details, verification state, publication state, review note, and timestamps. Indexes cover public status/deadline, country, and category.
+- `scholarships`: source/application URLs, dates, eligibility and award details, verification state, publication state, review note, and timestamps. Pending drafts may lack an official source URL; verification and publication require one. Indexes cover public status/deadline, country, and category.
 - `admins`: unique email, scrypt hash, role, and active state.
 - `sessions`: expiring server-side sessions linked to an admin.
 - `feedback`: anonymous message, category, moderation status, and timestamp.
@@ -59,9 +59,9 @@ Research is separate from page rendering. Normal page visits do not scrape exter
 1. Research public official/provider sources and record the source URL and retrieval time.
 2. Normalize known values; leave unknown information blank or explicitly “Not specified”.
 3. Check for provider/title/application URL duplicates.
-4. Import as a draft with `pnpm research:import` (manually researched rows are in `scripts/import-research.ts`). The script skips provider/title matches or identical title/application URL matches and never publishes; shared generic portals do not make distinct scholarship programs duplicates.
+4. Import researched opportunities with `pnpm research:import` (manually researched rows are in `scripts/import-research.ts`). Import the user-provided candidate lists with `pnpm research:import-candidates`; candidates have no official source URL until one is found. The candidate importer skips likely title duplicates and never publishes.
 5. Admin reviews source/application links, deadline, eligibility, benefits and document requirements; record conflicting or missing details in verification notes.
-6. Only mark a listing Verified after checking the official source. Publishing is enabled only for Verified listings.
+6. Add the official source URL and check the scholarship’s existence, eligibility, current application status, and details before marking it Verified. Publishing is enabled only for Verified listings with an official source URL.
 7. Revisit expired/uncertain listings and mark them Needs re-verification or Expired.
 
 Sample official sources (researched 2026-11-15; all remain drafts until review):
@@ -114,7 +114,7 @@ The deployment target is Railway. SvelteKit uses `@sveltejs/adapter-node` and `p
 
    Restrict backup file access, encrypt off-host copies, and test restores before relying on them. Never commit backups.
 
-Production database connectivity, persistent hosting, and backup automation are not configured. The analytics feature is implemented, but its migration has not been applied to the production database and its live request flow has not yet been verified. Production mobile/browser verification is also outstanding, so ZAC is not launch-ready yet.
+Production database connectivity and hosting are configured. Automated backups and restore verification, production mobile/browser verification, and the remaining launch checklist are still outstanding, so ZAC is not launch-ready yet.
 
 ## Package licenses
 

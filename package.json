@@ -24,7 +24,8 @@
 		"db:studio": "drizzle-kit studio",
 		"admin:create": "tsx scripts/create-admin.ts",
 		"research:import": "tsx scripts/import-research.ts",
-		"research:import-pasted": "tsx scripts/import-pasted-research.ts"
+		"research:import-pasted": "tsx scripts/import-pasted-research.ts",
+		"research:import-candidates": "tsx scripts/import-candidate-list.ts"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.73.0",

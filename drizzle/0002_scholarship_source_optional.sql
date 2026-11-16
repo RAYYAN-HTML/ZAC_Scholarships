@@ -1,0 +1,1 @@
+ALTER TABLE `scholarships` MODIFY COLUMN `source_url` varchar(1000);

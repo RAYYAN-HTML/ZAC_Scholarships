@@ -30,7 +30,11 @@ export const actions = {
 		if (!allowed[field as keyof typeof allowed].includes(value as never)) return fail(400, { error: 'Invalid status.' });
 		if (field === 'publicationStatus' && value === 'published') {
 			const [listing] = await getDb().select().from(scholarships).where(eq(scholarships.id, id)).limit(1);
-			if (!listing || listing.verificationStatus !== 'verified') return fail(400, { error: 'Only verified scholarships can be published.' });
+			if (!listing || listing.verificationStatus !== 'verified' || !listing.sourceUrl) return fail(400, { error: 'Only verified scholarships with an official source can be published.' });
+		}
+		if (field === 'verificationStatus' && value === 'verified') {
+			const [listing] = await getDb().select({ sourceUrl: scholarships.sourceUrl }).from(scholarships).where(eq(scholarships.id, id)).limit(1);
+			if (!listing?.sourceUrl) return fail(400, { error: 'Add an official source URL before verifying this scholarship.' });
 		}
 		const now = new Date();
 		const update = field === 'verificationStatus'
@@ -50,18 +54,19 @@ export const actions = {
 		if (ids.length > 100) return fail(400, { error: 'Select no more than 100 scholarships at a time.' });
 
 		const db = getDb();
-		const selected = await db.select({ id: scholarships.id, verificationStatus: scholarships.verificationStatus }).from(scholarships).where(inArray(scholarships.id, ids));
+		const selected = await db.select({ id: scholarships.id, verificationStatus: scholarships.verificationStatus, sourceUrl: scholarships.sourceUrl }).from(scholarships).where(inArray(scholarships.id, ids));
 		if (selected.length !== ids.length) return fail(404, { error: 'One or more selected scholarships could not be found.' });
 		const now = new Date();
 
 		if (mode === 'verify') {
+			if (selected.some((row) => !row.sourceUrl)) return fail(400, { error: 'Add official source URLs to every selected scholarship before verifying.' });
 			await db.update(scholarships).set({ verificationStatus: 'verified', verifiedAt: now, updatedAt: now }).where(inArray(scholarships.id, ids));
 			return { success: `${ids.length} scholarship${ids.length === 1 ? '' : 's'} marked verified. They remain drafts until published.` };
 		}
 
 		if (mode === 'publish') {
-			if (selected.some((row) => row.verificationStatus !== 'verified')) {
-				return fail(400, { error: 'Verify every selected scholarship before publishing.' });
+			if (selected.some((row) => row.verificationStatus !== 'verified' || !row.sourceUrl)) {
+				return fail(400, { error: 'Every selected scholarship needs an official source and verified status before publishing.' });
 			}
 			await db.update(scholarships).set({ publicationStatus: 'published', updatedAt: now }).where(inArray(scholarships.id, ids));
 			return { success: `${ids.length} verified scholarship${ids.length === 1 ? '' : 's'} published and now visible in the public directory.` };

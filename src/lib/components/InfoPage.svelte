@@ -1,0 +1,6 @@
+<script lang="ts">
+	let { eyebrow, title, intro, sections } = $props();
+</script>
+<svelte:head><title>{title} | CCE</title><meta name="description" content={intro}/><meta property="og:title" content="{title} | CCE"/><meta property="og:description" content={intro}/><meta property="og:type" content="website"/></svelte:head>
+<section class="info-head"><div class="container"><span class="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{intro}</p></div></section><section class="info-body"><div class="container info-grid">{#each sections as section}<article><h2>{section.title}</h2><p>{section.body}</p></article>{/each}</div></section>
+<style>.info-head{background:#edf3f5;padding:45px 0 38px}.info-head h1{font:800 34px Manrope,sans-serif;letter-spacing:-.055em;color:#173a59;margin:9px 0 6px}.info-head p{color:#677a8b;font-size:12px;line-height:1.7;max-width:630px;margin:0}.info-body{padding:28px 0}.info-grid{display:grid;gap:12px}.info-grid article{background:white;border:1px solid #e8edf1;border-radius:9px;padding:18px 20px}.info-grid h2{font:700 14px Manrope,sans-serif;color:#23425e;margin:0 0 7px}.info-grid p{font-size:11px;line-height:1.8;color:#687b8e;margin:0}@media(max-width:600px){.info-head{padding:34px 0 28px}.info-head h1{font-size:28px}.info-grid article{padding:15px}}</style>

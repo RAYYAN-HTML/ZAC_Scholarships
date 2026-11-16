@@ -11,7 +11,7 @@ A responsive scholarship discovery portal for students in Pakistan. The MVP uses
 - Admin scholarship review, duplicate warnings, publication guard, dashboard, and feedback moderation are implemented.
 - The controlled research import contains 24 opportunities researched from official sources. Research entries remain unpublished drafts pending admin verification and do not show publicly. Pakistan and international source scans are documented in `docs/research/`.
 - A persistent MySQL database is required for listings, admin login, and feedback. No database credentials are included. Without `DATABASE_URL`, the public site shows a clear empty/setup state and admin/database features cannot be used.
-- Deployment is not configured or launch-ready. The adapter is currently `adapter-auto`; select and configure the adapter for your hosting target before deployment.
+- SvelteKit is configured with `adapter-node` and `pnpm start` runs the generated Node server. Railway service/database setup and production deployment are still outstanding.
 
 ## Local setup
 
@@ -98,14 +98,12 @@ These are page-view counts, not unique visitors. ZAC does not persist cookies, v
 
 ## Deployment and recovery
 
-The deployment target is Railway. The Railway service and production database have not been created, and this workspace still uses `adapter-auto`; it is not ready to deploy yet. Before the first build, install the compatible Node adapter (`pnpm add -D @sveltejs/adapter-node@5.5.8`), set `kit.adapter` to `adapter()`, and add a `start` script that runs `node build`. The current isolated workspace could not resolve the npm registry and pnpm's global store link was outside its write permissions, so those changes were not applied or tested here. Do not deploy until the adapter build passes.
+The deployment target is Railway. SvelteKit uses `@sveltejs/adapter-node` and `pnpm start` runs `node build`. Railway service/database setup and production deployment are not yet verified.
 
-After that code change:
-
-1. Push the project to the intended GitHub repository, then create a Railway service from that repository using Railpack. Railway detects `pnpm start`; set the build command to `pnpm build` if it is not detected automatically.
+1. Push the project to `https://github.com/RAYYAN-HTML/ZAC_Scholarships`, then create a Railway service from that GitHub repository using Railpack. Set the build command to `pnpm build` and start command to `pnpm start` if Railway does not detect them.
 2. Add Railway's MySQL service. In the app service, set `DATABASE_URL` to a private Railway variable reference for the MySQL service's `MYSQL_URL` (for example `${{MySQL.MYSQL_URL}}`, using the actual service name). Keep the database private; the app does not need `MYSQL_PUBLIC_URL`.
 3. Set `PUBLIC_SITE_URL` to the deployed HTTPS domain. Configure Railway's healthcheck path as `/healthz`; this endpoint returns 200 only when MySQL is reachable.
-4. Back up the database, run `pnpm db:migrate` in the app's Railway environment, create the first administrator with `pnpm admin:create admin@example.com "ZAC Administrator"` and a temporary `ADMIN_INITIAL_PASSWORD`, then remove that temporary variable. Deploy and verify public routes, login/logout, admin guard, scholarship CRUD/publication, filters, feedback, sitemap, and mobile layouts.
+4. Set the app service's Pre-deploy Command to `pnpm db:migrate` and set a reasonable timeout. Railway runs it with the service's variables and private networking before starting a deployment; migration failure blocks the deployment. To create the first administrator, temporarily add `ADMIN_INITIAL_PASSWORD` to the app service variables, then run `railway run --no-local --service <app-service-name> --environment production pnpm admin:create admin@example.com "ZAC Administrator"` from the project folder. `--no-local` prevents the local `.env` from overriding Railway's production database URL. Remove `ADMIN_INITIAL_PASSWORD` after the admin is created. Deploy and verify public routes, login/logout, admin guard, scholarship CRUD/publication, filters, feedback, sitemap, and mobile layouts.
 5. Configure database backups and test a restore before relying on them. Keep an encrypted backup outside the app host. Example manual backup and restore:
 
    ```sh
@@ -115,7 +113,7 @@ After that code change:
 
    Restrict backup file access, encrypt off-host copies, and test restores before relying on them. Never commit backups.
 
-Production database connectivity, persistent hosting, and backup automation are not configured. The analytics feature is implemented, but its migration has not been applied to the local database and its live request flow has not yet been verified. Production mobile/browser verification is also outstanding, so ZAC is not launch-ready yet.
+Production database connectivity, persistent hosting, and backup automation are not configured. The analytics feature is implemented, but its migration has not been applied to the production database and its live request flow has not yet been verified. Production mobile/browser verification is also outstanding, so ZAC is not launch-ready yet.
 
 ## Package licenses
 
@@ -127,6 +125,6 @@ Direct dependencies and package metadata licenses: Svelte, SvelteKit, Vite, Tail
 - Research-import examples are manually curated drafts, not a live scraper. Extraction-failure history is currently written to server logs/admin review notes, not to a dedicated import-audit table.
 - Login and feedback use bounded, process-local rate-limit counters suitable only for a single-process MVP. Use a shared store before horizontal scaling.
 - Admin roles are stored, but the MVP treats authenticated admins/editors alike. Add permission-specific role checks before onboarding non-admin editors.
-- No production adapter, hosted database, backup scheduler, or deployment has been configured. Analytics are implemented but still need a migrated database and live verification.
+- No hosted database, backup scheduler, or deployment has been configured. Analytics are implemented but still need a migrated database and live verification.
 - Bulk move-to-draft is available; bulk publishing is intentionally not supported. Automated scholarship re-verification is not implemented.
 - No AI attribution or invented contributor credits are included.

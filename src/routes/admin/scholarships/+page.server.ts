@@ -5,6 +5,8 @@ import { getDb } from '$lib/server/db';
 import { scholarships } from '$lib/server/schema';
 import { findAdminScholarships } from '$lib/server/queries';
 
+const MAX_BULK_SELECTION = 1000;
+
 export async function load({ url }) {
 	if (!env.DATABASE_URL) return { rows: [], query: url.searchParams.get('q') ?? '', databaseConfigured: false };
 	try {
@@ -51,7 +53,7 @@ export const actions = {
 		const ids = [...new Set(form.getAll('ids').map(String).filter(Boolean))];
 		if (!['verify', 'publish', 'draft'].includes(mode)) return fail(400, { error: 'Choose a valid bulk action.' });
 		if (!ids.length) return fail(400, { error: 'Select at least one scholarship.' });
-		if (ids.length > 100) return fail(400, { error: 'Select no more than 100 scholarships at a time.' });
+		if (ids.length > MAX_BULK_SELECTION) return fail(400, { error: `Select no more than ${MAX_BULK_SELECTION} scholarships at a time.` });
 
 		const db = getDb();
 		const selected = await db.select({ id: scholarships.id, verificationStatus: scholarships.verificationStatus, sourceUrl: scholarships.sourceUrl }).from(scholarships).where(inArray(scholarships.id, ids));

@@ -60,9 +60,10 @@ Research is separate from page rendering. Normal page visits do not scrape exter
 2. Normalize known values; leave unknown information blank or explicitly “Not specified”.
 3. Check for provider/title/application URL duplicates.
 4. Import researched opportunities with `pnpm research:import` (manually researched rows are in `scripts/import-research.ts`). Import the user-provided candidate lists with `pnpm research:import-candidates`; candidates have no official source URL until one is found. The candidate importer skips likely title duplicates and never publishes.
-5. Admin reviews source/application links, deadline, eligibility, benefits and document requirements; record conflicting or missing details in verification notes.
-6. Add the official source URL and check the scholarship’s existence, eligibility, current application status, and details before marking it Verified. Publishing is enabled only for Verified listings with an official source URL.
-7. Revisit expired/uncertain listings and mark them Needs re-verification or Expired.
+5. Add newly located official source URLs to eligible source-less candidate drafts with `pnpm research:update-candidate-sources`. The curated mapping is `data/candidate-source-urls-2026-11-16.json`; the updater only fills a NULL source URL when the exact title is still pending verification and draft. It never changes verification or publication state. Re-run the command as more provider URLs are researched.
+6. Admin reviews source/application links, deadline, eligibility, benefits and document requirements; record conflicting or missing details in verification notes.
+7. Check the scholarship’s existence, eligibility, current application status, and details before marking it Verified. Publishing is enabled only for Verified listings with an official source URL.
+8. Revisit expired/uncertain listings and mark them Needs re-verification or Expired.
 
 Sample official sources (researched 2026-11-15; all remain drafts until review):
 

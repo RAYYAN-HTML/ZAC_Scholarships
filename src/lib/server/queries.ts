@@ -11,9 +11,21 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 	if (filters.degree) conditions.push(like(scholarships.degreeLevels, `%${filters.degree}%`));
 	if (filters.category) conditions.push(eq(scholarships.category, filters.category));
 	if (filters.funding) conditions.push(eq(scholarships.fundingType, filters.funding));
+	const today = dateKeyInKarachi();
+	const statusPriority = sql<number>`case
+		when ${scholarships.deadline} is not null and ${scholarships.deadline} < ${today} then 4
+		when ${scholarships.openingDate} is not null and ${scholarships.openingDate} > ${today} then 1
+		when ${scholarships.applicationStatus} = 'closed' then 3
+		when ${scholarships.applicationStatus} = 'upcoming' then 1
+		when ${scholarships.deadline} is null then 2
+		when ${scholarships.applicationStatus} = 'open' then 0
+		else 2
+	end`;
 	const order = filters.sort === 'latest'
-		? [desc(scholarships.createdAt)]
-		: [asc(isNull(scholarships.deadline)), asc(scholarships.deadline)];
+		? [asc(statusPriority), desc(scholarships.createdAt)]
+		: filters.sort === 'alphabetical'
+			? [asc(statusPriority), asc(scholarships.title)]
+			: [asc(statusPriority), asc(isNull(scholarships.deadline)), asc(scholarships.deadline)];
 	const publicListings = and(eq(scholarships.publicationStatus, 'published'), eq(scholarships.verificationStatus, 'verified'));
 	const [rows, count, countries, total] = await Promise.all([
 		db.select().from(scholarships).where(and(...conditions)).orderBy(...order).limit(size).offset((page - 1) * size),

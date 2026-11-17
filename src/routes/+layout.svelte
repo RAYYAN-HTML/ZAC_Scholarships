@@ -27,7 +27,7 @@
 			}
 		}, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
 		targets.forEach((target, index) => {
-			target.style.setProperty('--reveal-delay', `${Math.min(index % 4, 3) * 65}ms`);
+			target.style.setProperty('--reveal-delay', `${Math.min(index % 4, 3) * 95}ms`);
 			revealObserver?.observe(target);
 		});
 	}

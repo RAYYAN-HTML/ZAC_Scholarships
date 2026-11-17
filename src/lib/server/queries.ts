@@ -34,7 +34,10 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 		db.select({ value: sql<number>`count(*)` }).from(scholarships).where(publicListings)
 	]);
 	return {
-		rows,
+		rows: rows.map((row) => ({
+			...row,
+			applicationStatus: row.deadline && row.deadline < today ? 'closed' : row.applicationStatus
+		})),
 		count: Number(count[0]?.value ?? 0),
 		countries: countries.map((item) => item.value),
 		total: Number(total[0]?.value ?? 0),

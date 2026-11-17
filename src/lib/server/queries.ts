@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, isNull, like, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, like, or, sql } from 'drizzle-orm';
 import { getDb } from './db';
 import { feedback, scholarships } from './schema';
+import { dateKeyInKarachi } from './analytics';
 
 export async function findPublicScholarships(filters: { q?: string; country?: string; degree?: string; category?: string; funding?: string; sort?: string; page?: number }) {
 	const db = getDb(); const page = Math.max(1, filters.page ?? 1); const size = 9;
@@ -36,6 +37,16 @@ export async function findPublicScholarshipFilters() {
 		getDb().selectDistinct({ value: scholarships.fundingType }).from(scholarships).where(publicListings).orderBy(asc(scholarships.fundingType))
 	]);
 	return { categories: categories.map((item) => item.value), fundingTypes: fundingTypes.map((item) => item.value) };
+}
+/** Homepage highlights only actionable listings. Closed and elapsed-deadline scholarships stay in the directory. */
+export async function findHomepageFeatured() {
+	const today = dateKeyInKarachi();
+	return getDb().select().from(scholarships).where(and(
+		eq(scholarships.publicationStatus, 'published'),
+		eq(scholarships.verificationStatus, 'verified'),
+		inArray(scholarships.applicationStatus, ['open', 'upcoming']),
+		or(isNull(scholarships.deadline), gte(scholarships.deadline, today))
+	)).orderBy(asc(isNull(scholarships.deadline)), asc(scholarships.deadline), desc(scholarships.createdAt)).limit(3);
 }
 export async function findScholarship(slug: string) { const result = await getDb().select().from(scholarships).where(and(eq(scholarships.slug, slug),eq(scholarships.publicationStatus,'published'),eq(scholarships.verificationStatus,'verified'))).limit(1); return result[0]; }
 export async function findAdminScholarships() { return getDb().select().from(scholarships).orderBy(desc(scholarships.updatedAt)); }

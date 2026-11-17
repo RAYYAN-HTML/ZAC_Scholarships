@@ -87,7 +87,7 @@ The controlled import is not a recurring scraper. Provider scans and opportunity
 
 ## Site activity analytics
 
-The public site sends one first-party page-view event after client-side navigation. The server accepts only known public pages and slugs that belong to published, verified scholarships. Daily totals use the `Asia/Karachi` calendar date. The dashboard shows page views today, the last seven days, and the five most viewed published scholarships over the last 30 days.
+The public site sends one first-party page-view event after client-side navigation. The server accepts only known public pages and slugs that belong to published, verified scholarships. Daily totals use the `Asia/Karachi` calendar date. The dashboard shows page views today, a daily view graph for the last 14 days, the last seven days total, and the five most viewed published scholarships over the last 30 days.
 
 These are page-view counts, not unique visitors. ZAC does not persist cookies, visitor identities, or IP addresses for analytics. The endpoint uses the existing in-memory rate-limit helper briefly keyed by request IP to limit abuse; that counter is bounded, resets, and is not written to MySQL. The analytics table was added in migration `0001_stale_dormammu.sql`; run `pnpm db:migrate` before expecting dashboard counts to load. Existing views are not backfilled.
 

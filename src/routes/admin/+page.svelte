@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ArrowRight, BadgeCheck, Clock3, Eye, Globe2, Plus, ShieldAlert } from '@lucide/svelte';
+	import AdminViewsChart from '$lib/components/AdminViewsChart.svelte';
 	let { data } = $props();
 	const fmt = (value: string | Date) => new Date(value).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
 	const number = (value: number) => new Intl.NumberFormat('en-PK').format(value);
@@ -56,6 +57,7 @@
 			{/if}
 		</div>
 	</div>
+	<AdminViewsChart days={data.viewsByDay} />
 	<p class="privacy-note">Counts page views, not unique people. No visitor identity or IP address is saved.</p>
 	{/if}
 </section>

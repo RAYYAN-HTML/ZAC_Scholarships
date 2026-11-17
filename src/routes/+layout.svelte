@@ -4,16 +4,45 @@
 	import type { LayoutProps } from './$types';
 	import { BookOpenCheck, Menu, X, ArrowUpRight } from '@lucide/svelte';
 	import { afterNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	let { children }: LayoutProps = $props();
 	let menuOpen = $state(false);
+	let revealObserver: IntersectionObserver | undefined;
+	function observeRevealTargets() {
+		revealObserver?.disconnect();
+		const root = document.querySelector<HTMLElement>('.page-reveals');
+		if (!root) return;
+		root.classList.remove('reveal-ready');
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+		const targets = root.querySelectorAll<HTMLElement>('[data-reveal]');
+		if (!targets.length) return;
+		root.classList.add('reveal-ready');
+		revealObserver = new IntersectionObserver((entries) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('is-visible');
+					revealObserver?.unobserve(entry.target);
+				}
+			}
+		}, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
+		targets.forEach((target, index) => {
+			target.style.setProperty('--reveal-delay', `${Math.min(index % 4, 3) * 65}ms`);
+			revealObserver?.observe(target);
+		});
+	}
 	afterNavigate(({ to }) => {
+		requestAnimationFrame(observeRevealTargets);
 		if (!to || to.url.pathname === '/admin' || to.url.pathname.startsWith('/admin/')) return;
 		fetch('/api/analytics/view', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ path: to.url.pathname })
 		}).catch((cause) => console.error('[analytics] Could not record page view', cause));
+	});
+	onMount(() => {
+		observeRevealTargets();
+		return () => revealObserver?.disconnect();
 	});
 </script>
 
@@ -37,6 +66,6 @@
 			<a class="nav-cta" href="/feedback" onclick={() => menuOpen = false}>Share feedback <ArrowUpRight size={15}/></a>
 		</nav>
 	</header>
-	<main>{@render children()}</main>
+	<main><div class="page-reveals">{@render children()}</div></main>
 	<footer class="site-footer"><div class="footer-top"><a class="brand footer-brand" href="/"><span class="brand-mark"><BookOpenCheck size={19}/></span><span>ZAC<span class="brand-period">.</span><small>Scholarship portal</small></span></a><p>Clear opportunities. Confident futures.</p><div class="footer-links"><a href="/about">About</a><a href="/faq">FAQs</a><a href="/contact">Contact</a><a href="/feedback">Feedback</a></div></div><div class="footer-bottom"><span>© 2026 ZAC Scholarship Portal</span><span>Always verify details with the official provider.</span><a href="/admin/login">Admin</a></div></footer>
 </div>

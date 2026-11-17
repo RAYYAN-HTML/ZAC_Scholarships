@@ -4,10 +4,21 @@ import { randomUUID } from 'node:crypto';
 import { getDb } from '$lib/server/db';
 import { feedback } from '$lib/server/schema';
 import { feedbackSchema } from '$lib/server/validation';
+import { findPublicFeedback } from '$lib/server/queries';
 import { FixedWindowRateLimiter } from '$lib/server/rate-limit';
 import { readBytesWithinLimit } from '$lib/server/request-body';
 
 const hits = new FixedWindowRateLimiter(5, 60 * 60 * 1000);
+export async function load() {
+	if (!env.DATABASE_URL) return { publicFeedback: [], publicFeedbackAvailable: false };
+	try {
+		return { publicFeedback: await findPublicFeedback(), publicFeedbackAvailable: true };
+	} catch (cause) {
+		console.error('[feedback] Could not load public feedback', cause);
+		return { publicFeedback: [], publicFeedbackAvailable: false };
+	}
+}
+
 export const actions = { default: async ({ request, getClientAddress }) => {
 	const ip = getClientAddress(); if (!hits.consume(ip)) return fail(429, { error: 'Too many submissions. Please try again later.' });
 	let body: Uint8Array<ArrayBuffer> | null;
@@ -20,5 +31,5 @@ export const actions = { default: async ({ request, getClientAddress }) => {
 	} catch { return fail(400, { error: 'Please submit a valid feedback form.' }); }
 	const parsed = feedbackSchema.safeParse({ category: form.get('category'), message: form.get('message'), email: form.get('email') }); if (!parsed.success) return fail(400,{error:parsed.error.issues[0]?.message ?? 'Please check your message.'});
 	if (!env.DATABASE_URL) return fail(503,{error:'Feedback is temporarily unavailable because the portal database is not configured.'});
-	try { await getDb().insert(feedback).values({id:randomUUID(),...parsed.data}); return { success:true }; } catch (cause) { console.error('[feedback] Could not store anonymous feedback',cause); return fail(503,{error:'We couldn’t save your feedback. Please try again shortly.'}); }
+	try { await getDb().insert(feedback).values({id:randomUUID(),...parsed.data,publicRequested:form.get('publicRequested')==='true'}); return { success:true }; } catch (cause) { console.error('[feedback] Could not store feedback',cause); return fail(503,{error:'We couldn’t save your feedback. Please try again shortly.'}); }
 } };

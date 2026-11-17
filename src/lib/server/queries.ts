@@ -69,3 +69,4 @@ export async function findHomepageFeatured() {
 export async function findScholarship(slug: string) { const result = await getDb().select().from(scholarships).where(and(eq(scholarships.slug, slug),eq(scholarships.publicationStatus,'published'),eq(scholarships.verificationStatus,'verified'))).limit(1); return result[0]; }
 export async function findAdminScholarships() { return getDb().select().from(scholarships).orderBy(desc(scholarships.updatedAt)); }
 export async function findFeedback() { return getDb().select().from(feedback).orderBy(desc(feedback.createdAt)); }
+export async function findPublicFeedback() { return getDb().select({ id: feedback.id, category: feedback.category, message: feedback.message, adminReply: feedback.adminReply, repliedAt: feedback.repliedAt, createdAt: feedback.createdAt }).from(feedback).where(and(eq(feedback.publicRequested, true), eq(feedback.isPublic, true))).orderBy(desc(feedback.repliedAt), desc(feedback.createdAt)).limit(50); }

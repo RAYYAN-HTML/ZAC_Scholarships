@@ -29,6 +29,13 @@
       "when": 1794946237256,
       "tag": "0003_perpetual_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1794947585037,
+      "tag": "0004_strange_madame_hydra",
+      "breakpoints": true
     }
   ]
 }

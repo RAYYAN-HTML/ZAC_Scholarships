@@ -47,12 +47,14 @@ The readiness endpoint `/healthz` returns HTTP 200 only when the application can
 - `scholarships`: source/application URLs, dates, eligibility and award details, verification state, publication state, review note, and timestamps. Pending drafts may lack an official source URL; verification and publication require one. Indexes cover public status/deadline, country, and category.
 - `admins`: unique email, scrypt hash, role, and active state.
 - `sessions`: expiring server-side sessions linked to an admin.
-- `feedback`: message, category, optional email for administrator follow-up, moderation status, and timestamp. Email is not required and is shown only in the admin review queue.
+- `feedback`: message, category, optional email for administrator follow-up, public-sharing consent and approval, optional administrator reply, moderation status, and timestamp. Email is not required and is never displayed publicly.
 - `daily_page_views`: aggregate daily counts for public page paths and scholarship slugs. It stores no visitor identities or IP addresses.
 
 Schema changes should be made in `schema.ts`, then reviewed with `pnpm db:generate`. Commit generated migration SQL under `drizzle/`, inspect it before running `pnpm db:migrate`, and back up production data before applying schema changes.
 
 Migration `0003_perpetual_korg.sql` adds a nullable email field to feedback. It preserves existing submissions and should be applied via Railway's `pnpm db:migrate` pre-deploy command.
+
+Migration `0004_strange_madame_hydra.sql` adds opt-in public feedback, administrator approval, and a reply field. Existing feedback stays private because new consent and visibility fields default to false.
 
 ## Scholarship research and verification
 
@@ -82,7 +84,7 @@ The controlled import is not a recurring scraper. Provider scans and opportunity
 - `/admin/scholarships`: search, select multiple listings, mark them verified in one confirmed action, publish verified selections publicly, or move selections back to drafts. Bulk publishing is rejected if any selected record is unverified.
 - `/admin/scholarships/new`: create a draft from an official source.
 - `/admin/scholarships/[id]/edit`: edit, record review notes, set statuses, preview the official source, and publish only after verification.
-- `/admin/feedback`: review student questions and suggestions, contact submitters who supplied an email, and mark feedback New, Reviewed, or Resolved.
+- `/admin/feedback`: review student questions and suggestions, contact submitters who supplied an email, post a team reply, approve public visibility only when the submitter opted in, and mark feedback New, Reviewed, or Resolved.
 - Sign out from the admin navigation to invalidate the server-side session.
 
 ## Site activity analytics

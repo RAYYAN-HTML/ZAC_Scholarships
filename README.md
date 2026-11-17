@@ -4,7 +4,7 @@ A responsive scholarship discovery portal for students in Pakistan. The MVP uses
 
 ## Current project status
 
-- Public homepage, scholarship directory, scholarship details, About, FAQ, Contact, and anonymous Feedback pages are implemented.
+- Public homepage, scholarship directory, scholarship details, About, FAQ, Contact, and Feedback pages are implemented. Feedback offers common question topics and an optional follow-up email.
 - Directory search, country/degree/category/funding filters, sorting, and pagination use URL query parameters.
 - Public scholarship queries require both `verification_status = 'verified'` and `publication_status = 'published'`.
 - Admin login uses scrypt password hashes and HTTP-only, SameSite=strict, eight-day session cookies. A request-level server hook protects all `/admin` routes and actions except the public sign-in page; SvelteKit also enforces same-origin form submissions.
@@ -47,10 +47,12 @@ The readiness endpoint `/healthz` returns HTTP 200 only when the application can
 - `scholarships`: source/application URLs, dates, eligibility and award details, verification state, publication state, review note, and timestamps. Pending drafts may lack an official source URL; verification and publication require one. Indexes cover public status/deadline, country, and category.
 - `admins`: unique email, scrypt hash, role, and active state.
 - `sessions`: expiring server-side sessions linked to an admin.
-- `feedback`: anonymous message, category, moderation status, and timestamp.
+- `feedback`: message, category, optional email for administrator follow-up, moderation status, and timestamp. Email is not required and is shown only in the admin review queue.
 - `daily_page_views`: aggregate daily counts for public page paths and scholarship slugs. It stores no visitor identities or IP addresses.
 
 Schema changes should be made in `schema.ts`, then reviewed with `pnpm db:generate`. Commit generated migration SQL under `drizzle/`, inspect it before running `pnpm db:migrate`, and back up production data before applying schema changes.
+
+Migration `0003_perpetual_korg.sql` adds a nullable email field to feedback. It preserves existing submissions and should be applied via Railway's `pnpm db:migrate` pre-deploy command.
 
 ## Scholarship research and verification
 
@@ -80,7 +82,7 @@ The controlled import is not a recurring scraper. Provider scans and opportunity
 - `/admin/scholarships`: search, select multiple listings, mark them verified in one confirmed action, publish verified selections publicly, or move selections back to drafts. Bulk publishing is rejected if any selected record is unverified.
 - `/admin/scholarships/new`: create a draft from an official source.
 - `/admin/scholarships/[id]/edit`: edit, record review notes, set statuses, preview the official source, and publish only after verification.
-- `/admin/feedback`: mark anonymous feedback New, Reviewed, or Resolved.
+- `/admin/feedback`: review student questions and suggestions, contact submitters who supplied an email, and mark feedback New, Reviewed, or Resolved.
 - Sign out from the admin navigation to invalidate the server-side session.
 
 ## Site activity analytics

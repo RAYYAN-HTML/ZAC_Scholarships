@@ -7,7 +7,7 @@ import { analyticsFailureKind, dateKeyInKarachi, trackedResourceForPath } from '
 import { FixedWindowRateLimiter } from '../src/lib/server/rate-limit';
 import { isAdminProtectedPath } from '../src/lib/server/auth-guard';
 import { dailyPageViews } from '../src/lib/server/schema';
-import { directoryFilterSchema } from '../src/lib/server/validation';
+import { directoryFilterSchema, feedbackSchema } from '../src/lib/server/validation';
 import { readBodyWithinLimit, readBytesWithinLimit } from '../src/lib/server/request-body';
 
 test('rate limiter enforces a fixed window and bounded client table', () => {
@@ -110,4 +110,12 @@ test('feedback body cap preserves multipart form data and rejects oversized subm
 
 	const oversized = new Request('https://cce.test/feedback', { method: 'POST', body: 'x'.repeat(16_385) });
 	assert.equal(await readBytesWithinLimit(oversized, 16_384), null);
+});
+
+test('feedback accepts no email or a valid optional email and rejects malformed email', () => {
+	const base = { category: 'Eligibility question', message: 'Could you clarify the listed eligibility requirements?' };
+	assert.equal(feedbackSchema.safeParse(base).success, true);
+	assert.equal(feedbackSchema.safeParse({ ...base, email: '' }).data?.email, null);
+	assert.equal(feedbackSchema.safeParse({ ...base, email: 'student@example.com' }).data?.email, 'student@example.com');
+	assert.equal(feedbackSchema.safeParse({ ...base, email: 'not-an-email' }).success, false);
 });

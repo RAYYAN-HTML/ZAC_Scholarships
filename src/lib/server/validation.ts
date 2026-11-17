@@ -4,7 +4,7 @@ const secureUrl = z.string().trim().url().max(1000).refine((value) => new URL(va
 const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal(''));
 const optionalDate = z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => { const date = new Date(`${value}T00:00:00.000Z`); return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value; }, 'Enter a real calendar date')]).optional();
 
-export const feedbackSchema = z.object({ category: z.enum(['Website experience', 'Scholarship information', 'Accessibility', 'Suggestion', 'Other']), message: z.string().trim().min(10, 'Please add a little more detail (at least 10 characters).').max(2000) });
+export const feedbackSchema = z.object({ category: z.enum(['Eligibility question', 'Deadline or status question', 'Incorrect scholarship details', 'Broken application link', 'Missing scholarship', 'Website experience', 'Scholarship information', 'Accessibility', 'Suggestion', 'Other']), message: z.string().trim().min(10, 'Please add a little more detail (at least 10 characters).').max(2000), email: z.union([z.string().trim().email('Enter a valid email address.').max(254), z.literal('')]).optional().transform((value) => value || null) });
 export const loginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(1).max(200) });
 export const directoryFilterSchema = z.object({
 	q: z.string().trim().max(120).optional(),

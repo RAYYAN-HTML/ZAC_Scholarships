@@ -18,7 +18,7 @@ export const actions = { default: async ({ request, getClientAddress }) => {
 		const contentType = request.headers.get('content-type');
 		form = await new Request(request.url, { method: 'POST', headers: contentType ? { 'content-type': contentType } : {}, body: body.buffer }).formData();
 	} catch { return fail(400, { error: 'Please submit a valid feedback form.' }); }
-	const parsed = feedbackSchema.safeParse({ category: form.get('category'), message: form.get('message') }); if (!parsed.success) return fail(400,{error:parsed.error.issues[0]?.message ?? 'Please check your message.'});
+	const parsed = feedbackSchema.safeParse({ category: form.get('category'), message: form.get('message'), email: form.get('email') }); if (!parsed.success) return fail(400,{error:parsed.error.issues[0]?.message ?? 'Please check your message.'});
 	if (!env.DATABASE_URL) return fail(503,{error:'Feedback is temporarily unavailable because the portal database is not configured.'});
 	try { await getDb().insert(feedback).values({id:randomUUID(),...parsed.data}); return { success:true }; } catch (cause) { console.error('[feedback] Could not store anonymous feedback',cause); return fail(503,{error:'We couldn’t save your feedback. Please try again shortly.'}); }
 } };

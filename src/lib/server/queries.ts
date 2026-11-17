@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, like, or, sql } from 'drizzle
 import { getDb } from './db';
 import { feedback, scholarships } from './schema';
 import { dateKeyInKarachi } from './analytics';
+import { normalizeScholarshipCategory, rawScholarshipCategories } from '$lib/scholarship-categories';
 
 export async function findPublicScholarships(filters: { q?: string; country?: string; degree?: string; category?: string; funding?: string; sort?: string; page?: number }) {
 	const db = getDb(); const page = Math.max(1, filters.page ?? 1); const size = 9;
@@ -9,7 +10,7 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 	if (filters.q) conditions.push(or(like(scholarships.title, `%${filters.q}%`), like(scholarships.provider, `%${filters.q}%`), like(scholarships.fieldsOfStudy, `%${filters.q}%`))!);
 	if (filters.country) conditions.push(eq(scholarships.country, filters.country));
 	if (filters.degree) conditions.push(like(scholarships.degreeLevels, `%${filters.degree}%`));
-	if (filters.category) conditions.push(eq(scholarships.category, filters.category));
+	if (filters.category) conditions.push(inArray(scholarships.category, rawScholarshipCategories(filters.category)));
 	if (filters.funding) conditions.push(eq(scholarships.fundingType, filters.funding));
 	const today = dateKeyInKarachi();
 	const statusPriority = sql<number>`case
@@ -36,6 +37,7 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 	return {
 		rows: rows.map((row) => ({
 			...row,
+			category: normalizeScholarshipCategory(row.category),
 			applicationStatus: row.deadline && row.deadline < today ? 'closed' : row.applicationStatus
 		})),
 		count: Number(count[0]?.value ?? 0),
@@ -47,11 +49,12 @@ export async function findPublicScholarships(filters: { q?: string; country?: st
 }
 export async function findPublicScholarshipFilters() {
 	const publicListings = and(eq(scholarships.publicationStatus, 'published'), eq(scholarships.verificationStatus, 'verified'));
-	const [categories, fundingTypes] = await Promise.all([
+	const [rawCategories, fundingTypes] = await Promise.all([
 		getDb().selectDistinct({ value: scholarships.category }).from(scholarships).where(publicListings).orderBy(asc(scholarships.category)),
 		getDb().selectDistinct({ value: scholarships.fundingType }).from(scholarships).where(publicListings).orderBy(asc(scholarships.fundingType))
 	]);
-	return { categories: categories.map((item) => item.value), fundingTypes: fundingTypes.map((item) => item.value) };
+	const categories = [...new Set(rawCategories.map((item) => normalizeScholarshipCategory(item.value)))].sort();
+	return { categories, fundingTypes: fundingTypes.map((item) => item.value) };
 }
 /** Homepage highlights only actionable listings. Closed and elapsed-deadline scholarships stay in the directory. */
 export async function findHomepageFeatured() {
